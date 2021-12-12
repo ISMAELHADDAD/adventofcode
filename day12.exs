@@ -67,6 +67,53 @@ defmodule CaveNavigationSystem do
       end
     end)
   end
+
+  ## PART TWO
+  def find_all_possible_paths_part_2(
+        graph,
+        visited \\ [],
+        is_double_visit_used \\ false,
+        start_node \\ {"start", :start}
+      ) do
+    graph
+    |> Map.get(start_node)
+    |> Enum.reduce([], fn adj, paths ->
+      if adj in visited do
+        paths
+      else
+        case adj do
+          {"end", :end} ->
+            [[start_node, {"end", :end}] | paths]
+
+          {_, :small} ->
+            paths_found_double_visit =
+              case is_double_visit_used do
+                false ->
+                  find_all_possible_paths_part_2(graph, visited, true, adj)
+                  |> Enum.map(&[start_node | &1])
+
+                true ->
+                  []
+              end
+
+            paths_found =
+              find_all_possible_paths_part_2(graph, [adj | visited], is_double_visit_used, adj)
+              |> Enum.map(&[start_node | &1])
+
+            (paths ++ paths_found ++ paths_found_double_visit)
+            |> Enum.uniq_by(fn i -> Enum.map(i, fn {s, _} -> s end) |> Enum.join(",") end)
+
+          {_, :big} ->
+            paths ++
+              (find_all_possible_paths_part_2(graph, visited, is_double_visit_used, adj)
+               |> Enum.map(&[start_node | &1]))
+
+          {"start", :start} ->
+            paths
+        end
+      end
+    end)
+  end
 end
 
 ##
@@ -80,5 +127,11 @@ graph =
 IO.puts("Part one")
 
 CaveNavigationSystem.find_all_possible_paths(graph)
+|> Enum.count()
+|> IO.inspect()
+
+IO.puts("Part two")
+
+CaveNavigationSystem.find_all_possible_paths_part_2(graph)
 |> Enum.count()
 |> IO.inspect()
