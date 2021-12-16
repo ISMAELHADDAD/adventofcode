@@ -45,6 +45,44 @@ defmodule PolymerizationEquipment do
         end
       end)
     end)
+    |> Enum.frequencies()
+  end
+
+  ## PART TWO
+  def insert_n_steps_part_2(template, rules, steps) do
+    freq_map =
+      template
+      |> String.graphemes()
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(&List.to_string(&1))
+      |> Enum.frequencies()
+
+    Enum.reduce(1..steps, freq_map, fn _, freq_map ->
+      PolymerizationEquipment.get_frequencies(freq_map, rules)
+    end)
+    |> Enum.reduce(%{}, fn {pair, amount}, acc ->
+      [first_letter | _] = String.graphemes(pair)
+      Map.update(acc, first_letter, amount, &(&1 + amount))
+    end)
+  end
+
+  def get_frequencies(freq_map, rules) do
+    Enum.reduce(freq_map, %{}, fn {pair, amount}, acc ->
+      get_after_insertion_pairs(pair, rules)
+      |> Enum.reduce(acc, fn next_pair, acc ->
+        Map.update(acc, next_pair, amount, &(&1 + amount))
+      end)
+    end)
+  end
+
+  defp get_after_insertion_pairs(pair, rules) do
+    [first_letter, second_letter | _] = String.graphemes(pair)
+    inserted = Map.get(rules, pair)
+
+    [
+      [first_letter, inserted] |> List.to_string(),
+      [inserted, second_letter] |> List.to_string()
+    ]
   end
 end
 
@@ -58,6 +96,18 @@ end
 
 IO.puts("Part one")
 
-PolymerizationEquipment.insert_n_steps(template, rules, 10)
-|> Enum.frequencies()
-|> IO.inspect()
+{min1, max1} =
+  PolymerizationEquipment.insert_n_steps(template, rules, 10)
+  |> Map.values()
+  |> Enum.min_max()
+
+IO.inspect(max1 - min1)
+
+IO.puts("Part two")
+
+{min2, max2} =
+  PolymerizationEquipment.insert_n_steps_part_2(template, rules, 40)
+  |> Map.values()
+  |> Enum.min_max()
+
+IO.inspect(max2 - min2 + 1)
