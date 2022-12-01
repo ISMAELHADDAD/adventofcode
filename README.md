@@ -1,3 +1,3 @@
-# Advent Of Code 2021
+# Advent Of Code
 
-Very inefficient elixir code for solving the advent of code puzzles.
+2021: Done in elixir lang.
